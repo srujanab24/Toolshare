@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToolShare — Community Tool Rental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-brand">
+    <span class="brand-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+    <span class="brand-name">ToolShare</span>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="#" onclick="showPage('home')">Home</a>
+    <a href="#" onclick="showPage('tools')">Browse Tools</a>
+    <a href="#" id="dashLink" style="display:none" onclick="showDashboard()">Dashboard</a>
+    <a href="#" id="chatNavBtn" style="display:none" onclick="showPage('chat')">
+      <i class="fa-solid fa-comment-dots"></i>
+      <span id="chatBadge" class="badge" style="display:none">0</span>
+    </a>
+  </div>
+  <div class="nav-auth" id="navAuth">
+    <button class="btn-ghost" onclick="showPage('login')">Login</button>
+    <button class="btn-primary" onclick="showPage('register')">Join Free</button>
+  </div>
+  <div class="nav-user" id="navUser" style="display:none">
+    <span id="navUserName"></span>
+    <span id="navUserRole" class="role-badge"></span>
+    <button class="btn-ghost" onclick="logout()">Logout</button>
+  </div>
+  <button class="menu-toggle" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+</nav>
+
+<!-- PAGES -->
+<div id="app">
+
+  <!-- HOME PAGE -->
+  <div id="page-home" class="page active">
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="hero-tag">Community Powered</div>
+        <h1>Rent Any Tool.<br><span class="accent">Save Everything.</span></h1>
+        <p>Why buy when you can borrow? Access hundreds of tools from people in your neighbourhood at a fraction of the price.</p>
+        <div class="hero-actions">
+          <button class="btn-hero" onclick="showPage('tools')">Browse Tools <i class="fa-solid fa-arrow-right"></i></button>
+          <button class="btn-hero-outline" onclick="showPage('register')">List Your Tools</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><span class="stat-num" id="statTools">0</span><span>Tools Listed</span></div>
+          <div class="stat"><span class="stat-num" id="statOwners">0</span><span>Tool Owners</span></div>
+          <div class="stat"><span class="stat-num" id="statRentals">0</span><span>Rentals Done</span></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="tool-float t1"><i class="fa-solid fa-drill"></i></div>
+        <div class="tool-float t2"><i class="fa-solid fa-hammer"></i></div>
+        <div class="tool-float t3"><i class="fa-solid fa-screwdriver"></i></div>
+        <div class="tool-float t4"><i class="fa-solid fa-wrench"></i></div>
+      </div>
+    </section>
+
+    <section class="features-strip">
+      <div class="feat"><i class="fa-solid fa-indian-rupee-sign"></i><div><strong>Save 90%</strong><span>vs buying new</span></div></div>
+      <div class="feat"><i class="fa-solid fa-shield-halved"></i><div><strong>Verified Owners</strong><span>Safe & trusted</span></div></div>
+      <div class="feat"><i class="fa-solid fa-location-dot"></i><div><strong>Local Pickup</strong><span>Near you always</span></div></div>
+      <div class="feat"><i class="fa-solid fa-headset"></i><div><strong>24/7 Support</strong><span>Always here</span></div></div>
+    </section>
+
+    <section class="section-wrap">
+      <div class="section-header">
+        <h2>Popular Tools</h2>
+        <a href="#" onclick="showPage('tools')" class="see-all">See all <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="tools-grid" id="homeFeaturedTools">
+        <div class="loading-shimmer"></div>
+      </div>
+    </section>
+
+    <section class="how-it-works">
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step"><div class="step-num">01</div><i class="fa-solid fa-magnifying-glass"></i><h3>Browse & Search</h3><p>Find the tool you need. Filter by category, location, and price.</p></div>
+        <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="step"><div class="step-num">02</div><i class="fa-solid fa-calendar-check"></i><h3>Book Dates</h3><p>Select your rental dates and request the tool from the owner.</p></div>
+        <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="step"><div class="step-num">03</div><i class="fa-solid fa-handshake"></i><h3>Pick Up & Use</h3><p>Owner confirms, you pick up the tool and get the job done.</p></div>
+        <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="step"><div class="step-num">04</div><i class="fa-solid fa-star"></i><h3>Return & Review</h3><p>Return the tool and leave a review to help the community.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TOOLS PAGE -->
+  <div id="page-tools" class="page">
+    <div class="page-header">
+      <h1>Browse Tools</h1>
+      <p>Find the right tool for any job</p>
+    </div>
+    <div class="tools-layout">
+      <aside class="filter-panel">
+        <h3>Filters</h3>
+        <div class="filter-group">
+          <label>Search</label>
+          <div class="search-wrap"><i class="fa-solid fa-search"></i><input type="text" id="searchInput" placeholder="Drill, ladder..." oninput="filterTools()"></div>
+        </div>
+        <div class="filter-group">
+          <label>Category</label>
+          <select id="catFilter" onchange="filterTools()">
+            <option value="All">All Categories</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Max Price / Day</label>
+          <div class="range-wrap">
+            <input type="range" id="priceFilter" min="0" max="500" value="500" oninput="updatePriceLabel(); filterTools()">
+            <span id="priceLabel">₹500</span>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Location</label>
+          <input type="text" id="locationFilter" placeholder="e.g. Chennai" oninput="filterTools()">
+        </div>
+        <div class="filter-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="availableFilter" onchange="filterTools()"> Available only
+          </label>
+        </div>
+        <button class="btn-ghost full" onclick="resetFilters()">Reset Filters</button>
+      </aside>
+      <div class="tools-main">
+        <div class="tools-toolbar">
+          <span id="toolCount">Loading...</span>
+        </div>
+        <div class="tools-grid" id="toolsGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOL DETAIL PAGE -->
+  <div id="page-tool-detail" class="page">
+    <div id="toolDetailContent"></div>
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <div id="page-login" class="page">
+    <div class="auth-layout">
+      <div class="auth-side">
+        <h2>Welcome back to ToolShare</h2>
+        <p>Your community tool library.</p>
+        <div class="demo-creds">
+          <p><strong>Demo Owner:</strong> owner@demo.com</p>
+          <p><strong>Demo Customer:</strong> customer@demo.com</p>
+          <p><strong>Password:</strong> password123</p>
+        </div>
+      </div>
+      <div class="auth-form-wrap">
+        <h2>Login</h2>
+        <div id="loginError" class="form-error" style="display:none"></div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="••••••••">
+        </div>
+        <button class="btn-primary full" onclick="login()">Login <i class="fa-solid fa-arrow-right"></i></button>
+        <p class="auth-switch">Don't have an account? <a href="#" onclick="showPage('register')">Register</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTER PAGE -->
+  <div id="page-register" class="page">
+    <div class="auth-layout">
+      <div class="auth-side">
+        <h2>Join ToolShare Community</h2>
+        <p>Earn money by renting your tools, or save money by renting from neighbours.</p>
+        <div class="role-cards">
+          <div class="role-card" onclick="selectRole('owner')" id="roleOwnerCard">
+            <i class="fa-solid fa-box-open"></i>
+            <strong>Tool Owner</strong>
+            <span>List and earn from your idle tools</span>
+          </div>
+          <div class="role-card" onclick="selectRole('customer')" id="roleCustomerCard">
+            <i class="fa-solid fa-toolbox"></i>
+            <strong>Customer</strong>
+            <span>Rent tools when you need them</span>
+          </div>
+        </div>
+      </div>
+      <div class="auth-form-wrap">
+        <h2>Create Account</h2>
+        <div id="registerError" class="form-error" style="display:none"></div>
+        <div id="registerSuccess" class="form-success" style="display:none"></div>
+        <div class="form-group">
+          <label>I want to join as</label>
+          <div class="role-toggle">
+            <button id="btnRoleOwner" class="role-btn" onclick="selectRole('owner')"><i class="fa-solid fa-box-open"></i> Tool Owner</button>
+            <button id="btnRoleCust" class="role-btn" onclick="selectRole('customer')"><i class="fa-solid fa-toolbox"></i> Customer</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="tel" id="regPhone" placeholder="10-digit mobile number">
+        </div>
+        <div class="form-group">
+          <label>City / Address</label>
+          <input type="text" id="regAddress" placeholder="Chennai, TN">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPass" placeholder="Min 6 characters">
+        </div>
+        <button class="btn-primary full" onclick="register()">Create Account <i class="fa-solid fa-arrow-right"></i></button>
+        <p class="auth-switch">Already have an account? <a href="#" onclick="showPage('login')">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page">
+    <div id="dashboardContent"></div>
+  </div>
+
+  <!-- CHAT PAGE -->
+  <div id="page-chat" class="page">
+    <div class="chat-layout">
+      <div class="chat-sidebar">
+        <div class="chat-sidebar-header"><h3>Messages</h3></div>
+        <div id="conversationList" class="conversation-list"></div>
+      </div>
+      <div class="chat-main" id="chatMain">
+        <div class="chat-empty">
+          <i class="fa-solid fa-comment-dots"></i>
+          <p>Select a conversation to start chatting</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TOOL PAGE (owner only) -->
+  <div id="page-add-tool" class="page">
+    <div class="form-page-wrap">
+      <h2>List a New Tool</h2>
+      <div id="addToolError" class="form-error" style="display:none"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Tool Title *</label>
+          <input type="text" id="toolTitle" placeholder="e.g. Bosch Drill Machine">
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="toolCategory">
+            <option>Power Tools</option><option>Hand Tools</option><option>Ladders</option>
+            <option>Garden</option><option>Cleaning</option><option>Measuring</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price per Day (₹) *</label>
+          <input type="number" id="toolPrice" placeholder="100">
+        </div>
+        <div class="form-group">
+          <label>Security Deposit (₹)</label>
+          <input type="number" id="toolDeposit" placeholder="500">
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <select id="toolCondition">
+            <option>Excellent</option><option>Good</option><option>Fair</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="toolLocation" placeholder="Chennai, TN">
+        </div>
+        <div class="form-group full-span">
+          <label>Image URL</label>
+          <input type="url" id="toolImage" placeholder="https://...">
+        </div>
+        <div class="form-group full-span">
+          <label>Description</label>
+          <textarea id="toolDesc" rows="4" placeholder="Describe the tool, its condition, what it's good for..."></textarea>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addTool()">List Tool <i class="fa-solid fa-plus"></i></button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+      <span class="brand-name">ToolShare</span>
+    </div>
+    <p>© 2026 Community Tool Sharing Platform. Built for neighbours, by neighbours.</p>
+  </div>
+</footer>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Book Tool</h3>
+      <button onclick="closeModal('bookingModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="bookingModalContent"></div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Leave a Review</h3>
+      <button onclick="closeModal('reviewModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="reviewModalContent"></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
